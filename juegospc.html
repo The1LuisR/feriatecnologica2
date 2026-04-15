@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juegos PC — GameVault</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="bg-glow"></div>
+<div id="navContainer"></div>
+<div id="searchOverlayContainer"></div>
+<div id="gameModal" class="modal-overlay" onclick="if(event.target===this)closeModal()"></div>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <div class="page-title">🖥️ Juegos <span>PC</span></div>
+        <div class="page-sub">Descarga los mejores juegos para Windows, macOS y Linux</div>
+      </div>
+      <div class="page-stats">
+        <div class="stat-pill"><span class="dot"></span> <span id="totalCount">0</span> Juegos</div>
+        <div class="stat-pill">✅ Sitios oficiales</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero" style="margin-bottom:32px">
+    <img src="https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/292030/page_bg_generated_v6b.jpg" alt="Witcher 3" onerror="this.style.display='none'">
+    <div class="hero-content">
+      <div class="hero-cats"><span class="badge badge-hot">🏆 GOTY Winner</span><span class="badge badge-new">Next-Gen Update</span></div>
+      <div class="hero-title">The Witcher 3<br>Wild Hunt</div>
+      <p class="hero-desc">El RPG de mundo abierto ganador de más de 800 premios. Actualización Next-Gen con ray tracing gratuita.</p>
+      <div class="hero-actions">
+        <button class="btn-hero btn-hero-primary" onclick="openModal(PC_GAMES.find(g=>g.id==='the-witcher-3'))">⬇ Descargar Ahora</button>
+        <button class="btn-hero btn-hero-secondary" onclick="openModal(PC_GAMES.find(g=>g.id==='the-witcher-3'))">📋 Ver Detalles</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <span class="filter-label">Categoría:</span>
+    <button class="filter-btn active" data-cat="all" onclick="applyFilter(this,'all')">Todos</button>
+    <button class="filter-btn" data-cat="Action" onclick="applyFilter(this,'Action')">⚔️ Action</button>
+    <button class="filter-btn" data-cat="RPG" onclick="applyFilter(this,'RPG')">🎲 RPG</button>
+    <button class="filter-btn" data-cat="Simulation" onclick="applyFilter(this,'Simulation')">🏗️ Sim</button>
+    <button class="filter-btn" data-cat="FPS" onclick="applyFilter(this,'FPS')">🔫 FPS</button>
+    <button class="filter-btn" data-cat="Open World" onclick="applyFilter(this,'Open World')">🌍 Open World</button>
+    <button class="filter-btn" data-cat="Indie" onclick="applyFilter(this,'Indie')">⚡ Indie</button>
+    <button class="filter-btn" data-cat="Survival" onclick="applyFilter(this,'Survival')">🌱 Survival</button>
+    <div class="filter-sort">
+      <span class="filter-label">Ordenar:</span>
+      <select class="sort-select" id="sortSelect" onchange="renderGames()">
+        <option value="rating">🔥 Populares</option>
+        <option value="date">🆕 Recientes</option>
+        <option value="name">🔡 A-Z</option>
+        <option value="dl">⬇ Descargados</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title">🖥️ Todos los Juegos PC <span class="count" id="gameCount"></span></div>
+  <div class="games-grid" id="gamesGrid"></div>
+</main>
+
+<footer>
+  <div>© 2026 <strong>GameVault</strong> — Tu portal definitivo de descargas · Todos los derechos reservados</div>
+</footer>
+
+<script src="app.js"></script>
+<script src="data-pc.js"></script>
+<script src="data-celulares.js"></script>
+<script src="data-consolas.js"></script>
+<script src="data-apps.js"></script>
+<script>
+const ALL_GAMES = [...PC_GAMES, ...MOBILE_GAMES, ...CONSOLE_GAMES, ...MOBILE_APPS, ...DESKTOP_APPS];
+let currentCat = 'all';
+
+document.getElementById('navContainer').innerHTML = navHTML('juegospc.html');
+document.getElementById('searchOverlayContainer').innerHTML = `
+<div id="searchOverlay" class="search-overlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-modal">
+    <div class="search-big-wrap">
+      <input id="searchBigInput" class="search-big" placeholder="Buscar juegos PC…" oninput="handleSearch(this.value,ALL_GAMES)">
+      <span class="search-close" onclick="closeSearch()">✕</span>
+    </div>
+    <div class="search-hint">
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='BeamNG';handleSearch('BeamNG',ALL_GAMES)">BeamNG.Drive</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='GTA';handleSearch('GTA',ALL_GAMES)">GTA V</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='Minecraft';handleSearch('Minecraft',ALL_GAMES)">Minecraft</span>
+    </div>
+    <div id="searchResultsBox" class="search-results-box"></div>
+  </div>
+</div>`;
+
+document.getElementById('totalCount').textContent = PC_GAMES.length;
+
+const urlCat = new URLSearchParams(window.location.search).get('cat');
+if (urlCat) {
+  currentCat = urlCat;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === urlCat);
+  });
+}
+
+function renderGames() {
+  const sortMethod = document.getElementById('sortSelect').value;
+  let games = filterGames(PC_GAMES, currentCat === 'all' ? '' : currentCat, '');
+  games = sortGames(games, sortMethod);
+  document.getElementById('gameCount').textContent = `(${games.length})`;
+  if (!games.length) {
+    document.getElementById('gamesGrid').innerHTML = `<div class="no-results"><div class="big">😔</div><h3>No se encontraron juegos</h3><p>Prueba con otra categoría</p></div>`;
+    return;
+  }
+  document.getElementById('gamesGrid').innerHTML = games.map((g,i) => renderCard(g,i*40)).join('');
+}
+
+function applyFilter(btn, cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCat = cat;
+  renderGames();
+}
+
+renderGames();
+</script>
+</body>
+</html>

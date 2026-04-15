@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplicaciones Móviles — GameVault</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="bg-glow" style="background:rgba(34,197,94,0.1)"></div>
+<div id="navContainer"></div>
+<div id="searchOverlayContainer"></div>
+<div id="gameModal" class="modal-overlay" onclick="if(event.target===this)closeModal()"></div>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <div class="page-title">📲 Aplicaciones <span>Móviles</span></div>
+        <div class="page-sub">Apps esenciales para Android e iOS — Productividad, redes sociales y entretenimiento</div>
+      </div>
+      <div class="page-stats">
+        <div class="stat-pill"><span class="dot"></span> <span id="totalCount">0</span> Apps</div>
+        <div class="stat-pill">📱 Android &amp; iOS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Categoría:</span>
+    <button class="filter-btn active" data-cat="all" onclick="applyFilter(this,'all')">Todas</button>
+    <button class="filter-btn" data-cat="Música" onclick="applyFilter(this,'Música')">🎵 Música</button>
+    <button class="filter-btn" data-cat="Mensajería" onclick="applyFilter(this,'Mensajería')">💬 Mensajería</button>
+    <button class="filter-btn" data-cat="Vídeo" onclick="applyFilter(this,'Vídeo')">🎬 Video</button>
+    <button class="filter-btn" data-cat="Edición" onclick="applyFilter(this,'Edición')">✂️ Edición</button>
+    <button class="filter-btn" data-cat="Social" onclick="applyFilter(this,'Social')">🌐 Social</button>
+    <button class="filter-btn" data-cat="Herramientas" onclick="applyFilter(this,'Herramientas')">🔧 Herramientas</button>
+    <div class="filter-sort">
+      <span class="filter-label">Ordenar:</span>
+      <select class="sort-select" id="sortSelect" onchange="renderGames()">
+        <option value="rating">⭐ Mejor valoradas</option>
+        <option value="dl">⬇ Más descargadas</option>
+        <option value="date">🆕 Más recientes</option>
+        <option value="name">🔡 A-Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title">📲 Aplicaciones Móviles <span class="count" id="gameCount"></span></div>
+  <div class="games-grid" id="gamesGrid"></div>
+</main>
+
+<footer>
+  <div>© 2026 <strong>GameVault</strong> — Tu portal definitivo de descargas · Todos los derechos reservados</div>
+</footer>
+
+<script src="app.js"></script>
+<script src="data-pc.js"></script>
+<script src="data-celulares.js"></script>
+<script src="data-consolas.js"></script>
+<script src="data-apps.js"></script>
+<script>
+const ALL_GAMES = [...PC_GAMES, ...MOBILE_GAMES, ...CONSOLE_GAMES, ...MOBILE_APPS, ...DESKTOP_APPS];
+let currentCat = 'all';
+
+document.getElementById('navContainer').innerHTML = navHTML('aplicacionesmoviles.html');
+document.getElementById('searchOverlayContainer').innerHTML = `
+<div id="searchOverlay" class="search-overlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-modal">
+    <div class="search-big-wrap">
+      <input id="searchBigInput" class="search-big" placeholder="Buscar aplicaciones móviles…" oninput="handleSearch(this.value,ALL_GAMES)">
+      <span class="search-close" onclick="closeSearch()">✕</span>
+    </div>
+    <div class="search-hint">
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='Spotify';handleSearch('Spotify',ALL_GAMES)">Spotify</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='WhatsApp';handleSearch('WhatsApp',ALL_GAMES)">WhatsApp</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='TikTok';handleSearch('TikTok',ALL_GAMES)">TikTok</span>
+    </div>
+    <div id="searchResultsBox" class="search-results-box"></div>
+  </div>
+</div>`;
+
+document.getElementById('totalCount').textContent = MOBILE_APPS.length;
+
+function renderGames() {
+  const sortMethod = document.getElementById('sortSelect').value;
+  let apps = filterGames(MOBILE_APPS, currentCat === 'all' ? '' : currentCat, '');
+  apps = sortGames(apps, sortMethod);
+  document.getElementById('gameCount').textContent = `(${apps.length})`;
+  if (!apps.length) {
+    document.getElementById('gamesGrid').innerHTML = `<div class="no-results"><div class="big">😔</div><h3>No se encontraron apps</h3></div>`;
+    return;
+  }
+  document.getElementById('gamesGrid').innerHTML = apps.map((g,i) => renderCard(g,i*40)).join('');
+}
+
+function applyFilter(btn, cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); currentCat = cat; renderGames();
+}
+
+renderGames();
+</script>
+</body>
+</html>

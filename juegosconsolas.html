@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juegos Consolas — GameVault</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="bg-glow" style="background:rgba(226,88,34,0.12)"></div>
+<div id="navContainer"></div>
+<div id="searchOverlayContainer"></div>
+<div id="gameModal" class="modal-overlay" onclick="if(event.target===this)closeModal()"></div>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <div class="page-title">🎮 Juegos <span>Consolas</span></div>
+        <div class="page-sub">PlayStation, Xbox, Nintendo Switch — Los mejores títulos</div>
+      </div>
+      <div class="page-stats">
+        <div class="stat-pill"><span class="dot"></span> <span id="totalCount">0</span> Juegos</div>
+        <div class="stat-pill">🎮 PS5 · Xbox · Switch</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+    <button class="filter-btn active" data-con="all" onclick="applyConsole(this,'all')">🎮 Todas</button>
+    <button class="filter-btn" data-con="PS5" onclick="applyConsole(this,'PS5')">PlayStation 5</button>
+    <button class="filter-btn" data-con="PS4" onclick="applyConsole(this,'PS4')">PlayStation 4</button>
+    <button class="filter-btn" data-con="Xbox" onclick="applyConsole(this,'Xbox')">Xbox Series X|S</button>
+    <button class="filter-btn" data-con="Switch" onclick="applyConsole(this,'Switch')">Nintendo Switch</button>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Género:</span>
+    <button class="filter-btn active" data-cat="all" onclick="applyFilter(this,'all')">Todos</button>
+    <button class="filter-btn" data-cat="Action" onclick="applyFilter(this,'Action')">⚔️ Action</button>
+    <button class="filter-btn" data-cat="Adventure" onclick="applyFilter(this,'Adventure')">🗺️ Adventure</button>
+    <button class="filter-btn" data-cat="RPG" onclick="applyFilter(this,'RPG')">🎲 RPG</button>
+    <button class="filter-btn" data-cat="FPS" onclick="applyFilter(this,'FPS')">🔫 FPS</button>
+    <button class="filter-btn" data-cat="Racing" onclick="applyFilter(this,'Racing')">🏎️ Racing</button>
+    <button class="filter-btn" data-cat="Multiplayer" onclick="applyFilter(this,'Multiplayer')">🤝 Multi</button>
+    <div class="filter-sort">
+      <span class="filter-label">Ordenar:</span>
+      <select class="sort-select" id="sortSelect" onchange="renderGames()">
+        <option value="rating">⭐ Mejor valorados</option>
+        <option value="date">🆕 Más recientes</option>
+        <option value="name">🔡 A-Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title">🎮 Juegos de Consola <span class="count" id="gameCount"></span></div>
+  <div class="games-grid" id="gamesGrid"></div>
+</main>
+
+<footer>
+  <div>© 2026 <strong>GameVault</strong> — Tu portal definitivo de descargas · Todos los derechos reservados</div>
+</footer>
+
+<script src="app.js"></script>
+<script src="data-pc.js"></script>
+<script src="data-celulares.js"></script>
+<script src="data-consolas.js"></script>
+<script src="data-apps.js"></script>
+<script>
+const ALL_GAMES = [...PC_GAMES, ...MOBILE_GAMES, ...CONSOLE_GAMES, ...MOBILE_APPS, ...DESKTOP_APPS];
+let currentCat = 'all', currentConsole = 'all';
+
+document.getElementById('navContainer').innerHTML = navHTML('juegosconsolas.html');
+document.getElementById('searchOverlayContainer').innerHTML = `
+<div id="searchOverlay" class="search-overlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-modal">
+    <div class="search-big-wrap">
+      <input id="searchBigInput" class="search-big" placeholder="Buscar juegos de consola…" oninput="handleSearch(this.value,ALL_GAMES)">
+      <span class="search-close" onclick="closeSearch()">✕</span>
+    </div>
+    <div class="search-hint">
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='God of War';handleSearch('God of War',ALL_GAMES)">God of War</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='Zelda';handleSearch('Zelda',ALL_GAMES)">Zelda</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='Mario';handleSearch('Mario',ALL_GAMES)">Mario Kart</span>
+    </div>
+    <div id="searchResultsBox" class="search-results-box"></div>
+  </div>
+</div>`;
+
+document.getElementById('totalCount').textContent = CONSOLE_GAMES.length;
+
+function renderGames() {
+  const sortMethod = document.getElementById('sortSelect').value;
+  let games = CONSOLE_GAMES.filter(g => {
+    const matchCat = currentCat === 'all' || g.categories.includes(currentCat);
+    const matchConsole = currentConsole === 'all' || g.platform.includes(currentConsole);
+    return matchCat && matchConsole;
+  });
+  games = sortGames(games, sortMethod);
+  document.getElementById('gameCount').textContent = `(${games.length})`;
+  if (!games.length) {
+    document.getElementById('gamesGrid').innerHTML = `<div class="no-results"><div class="big">😔</div><h3>No se encontraron juegos</h3></div>`;
+    return;
+  }
+  document.getElementById('gamesGrid').innerHTML = games.map((g,i) => renderCard(g,i*40)).join('');
+}
+
+function applyFilter(btn, cat) {
+  document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); currentCat = cat; renderGames();
+}
+function applyConsole(btn, con) {
+  document.querySelectorAll('[data-con]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); currentConsole = con; renderGames();
+}
+
+renderGames();
+</script>
+</body>
+</html>

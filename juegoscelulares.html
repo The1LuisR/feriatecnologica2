@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juegos Celulares — GameVault</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="bg-glow" style="background:rgba(124,58,237,0.15)"></div>
+<div id="navContainer"></div>
+<div id="searchOverlayContainer"></div>
+<div id="gameModal" class="modal-overlay" onclick="if(event.target===this)closeModal()"></div>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <div class="page-title">📱 Juegos <span>Celulares</span></div>
+        <div class="page-sub">Los mejores juegos para Android e iOS — Gratis y de pago</div>
+      </div>
+      <div class="page-stats">
+        <div class="stat-pill"><span class="dot"></span> <span id="totalCount">0</span> Juegos</div>
+        <div class="stat-pill">📱 Android &amp; iOS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Categoría:</span>
+    <button class="filter-btn active" data-cat="all" onclick="applyFilter(this,'all')">Todos</button>
+    <button class="filter-btn" data-cat="Battle Royale" onclick="applyFilter(this,'Battle Royale')">💥 Battle Royale</button>
+    <button class="filter-btn" data-cat="MOBA" onclick="applyFilter(this,'MOBA')">⚡ MOBA</button>
+    <button class="filter-btn" data-cat="RPG" onclick="applyFilter(this,'RPG')">🎲 RPG</button>
+    <button class="filter-btn" data-cat="Puzzle" onclick="applyFilter(this,'Puzzle')">🧩 Puzzle</button>
+    <button class="filter-btn" data-cat="Strategy" onclick="applyFilter(this,'Strategy')">🏰 Strategy</button>
+    <button class="filter-btn" data-cat="Casual" onclick="applyFilter(this,'Casual')">😊 Casual</button>
+    <button class="filter-btn" data-cat="AR" onclick="applyFilter(this,'AR')">🌐 AR</button>
+    <div class="filter-sort">
+      <span class="filter-label">Ordenar:</span>
+      <select class="sort-select" id="sortSelect" onchange="renderGames()">
+        <option value="rating">⭐ Mejor valorados</option>
+        <option value="dl">⬇ Más descargados</option>
+        <option value="date">🆕 Más recientes</option>
+        <option value="name">🔡 A-Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title">📱 Todos los Juegos Móviles <span class="count" id="gameCount"></span></div>
+  <div class="games-grid" id="gamesGrid"></div>
+</main>
+
+<footer>
+  <div>© 2026 <strong>GameVault</strong> — Tu portal definitivo de descargas · Todos los derechos reservados</div>
+</footer>
+
+<script src="app.js"></script>
+<script src="data-pc.js"></script>
+<script src="data-celulares.js"></script>
+<script src="data-consolas.js"></script>
+<script src="data-apps.js"></script>
+<script>
+const ALL_GAMES = [...PC_GAMES, ...MOBILE_GAMES, ...CONSOLE_GAMES, ...MOBILE_APPS, ...DESKTOP_APPS];
+let currentCat = 'all';
+
+document.getElementById('navContainer').innerHTML = navHTML('juegoscelulares.html');
+document.getElementById('searchOverlayContainer').innerHTML = `
+<div id="searchOverlay" class="search-overlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-modal">
+    <div class="search-big-wrap">
+      <input id="searchBigInput" class="search-big" placeholder="Buscar juegos móviles…" oninput="handleSearch(this.value,ALL_GAMES)">
+      <span class="search-close" onclick="closeSearch()">✕</span>
+    </div>
+    <div class="search-hint">
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='PUBG';handleSearch('PUBG',ALL_GAMES)">PUBG Mobile</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='Clash';handleSearch('Clash',ALL_GAMES)">Clash Royale</span>
+      <span class="hint-tag" onclick="document.getElementById('searchBigInput').value='Genshin';handleSearch('Genshin',ALL_GAMES)">Genshin Impact</span>
+    </div>
+    <div id="searchResultsBox" class="search-results-box"></div>
+  </div>
+</div>`;
+
+document.getElementById('totalCount').textContent = MOBILE_GAMES.length;
+
+function renderGames() {
+  const sortMethod = document.getElementById('sortSelect').value;
+  let games = filterGames(MOBILE_GAMES, currentCat === 'all' ? '' : currentCat, '');
+  games = sortGames(games, sortMethod);
+  document.getElementById('gameCount').textContent = `(${games.length})`;
+  if (!games.length) {
+    document.getElementById('gamesGrid').innerHTML = `<div class="no-results"><div class="big">😔</div><h3>No se encontraron juegos</h3></div>`;
+    return;
+  }
+  document.getElementById('gamesGrid').innerHTML = games.map((g,i) => renderCard(g,i*40)).join('');
+}
+
+function applyFilter(btn, cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); currentCat = cat; renderGames();
+}
+
+renderGames();
+</script>
+</body>
+</html>
